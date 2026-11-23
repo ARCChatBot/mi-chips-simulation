@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MI-CHIPS Gate Simulation</title>
+    <title>Student Success Model</title>
     <meta name="description" content="Interactive simulation of the MI-CHIPS 5-layer gated logistic regression model for cleanroom certification readiness.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -268,7 +268,30 @@
         .sub { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1.2px; color: var(--label); margin: 20px 0 8px; }
         .sub:first-of-type { margin-top: 0; }
 
-        .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+        .math-intro { font-size: 0.9rem; color: var(--label); margin-bottom: 4px; }
+        .mstep { padding: 20px 0 4px; border-top: 1px solid var(--line); margin-top: 16px; }
+        .mstep-head { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+        .mstep-num {
+            flex: none;
+            width: 26px; height: 26px; border-radius: 50%;
+            display: grid; place-items: center;
+            background: var(--heading); color: var(--c02-white);
+            font-size: 0.8rem; font-weight: 700;
+        }
+        .mstep h3 { font-size: 1rem; font-weight: 700; letter-spacing: -0.01em; }
+        .mstep-text { font-size: 0.875rem; color: var(--label); margin-bottom: 10px; }
+        .mstep-text b { color: var(--text); font-weight: 600; }
+        .mstep .eq { margin-bottom: 12px; }
+        .mstep-live {
+            margin-top: 12px;
+            padding: 8px 12px;
+            border-left: 3px solid var(--accent);
+            background: var(--c12-frost);
+            border-radius: 0 6px 6px 0;
+            font-size: 0.85rem;
+        }
+        .mstep-live b { color: var(--heading); }
+        .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
         .stat { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 8px; text-align: center; }
         .stat-lbl { font-size: 0.68rem; color: var(--label); }
         .stat-val { font-family: var(--mono); font-size: 0.9rem; font-weight: 600; color: var(--heading); font-variant-numeric: tabular-nums; }
@@ -338,7 +361,6 @@
             body { padding-top: 24px; }
             .layout { grid-template-columns: minmax(0, 1fr); }
             .results { order: -1; }
-            .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         }
     </style>
 </head>
@@ -347,7 +369,7 @@
 
     <header>
         <div class="eyebrow">Operation SEMI / MI-CHIPS</div>
-        <h1>Certification Readiness Simulator</h1>
+        <h1>Student Success Logistic Regression Model</h1>
         <p class="lede">Move the sliders to see how a student's layer scores and training time change their chance of earning cleanroom certification.</p>
     </header>
 
@@ -396,27 +418,36 @@
             </div>
 
             <details class="card math">
-                <summary>Show the math</summary>
+                <summary>Show the math · 3 steps</summary>
+                <p class="math-intro">The model turns five layer scores and training time into one probability in three steps.</p>
 
-                <div class="sub">Key values</div>
-                <div class="stats">
-                    <div class="stat"><div class="stat-lbl">Complexity C</div><div class="stat-val" id="out-c"></div></div>
-                    <div class="stat"><div class="stat-lbl">Mean score P̄</div><div class="stat-val" id="out-p"></div></div>
-                    <div class="stat"><div class="stat-lbl">Velocity LV</div><div class="stat-val" id="out-lv"></div></div>
-                    <div class="stat"><div class="stat-lbl">Log-odds z</div><div class="stat-val" id="out-z"></div></div>
+                <div class="mstep">
+                    <div class="mstep-head"><span class="mstep-num">1</span><h3>Check the gates and measure progress</h3></div>
+                    <p class="mstep-text">Only layers cleared in order (75% or higher) count. From those layers the model takes three numbers: <b>C</b>, the complexity of the highest layer cleared; <b>P̄</b>, the average cleared score; and <b>LV</b>, the learning velocity, or how much complexity-weighted skill the student gains per second of training.</p>
+                    <div class="eq">LV = (C · P̄) / (100 · T_seconds)</div>
+                    <div class="stats">
+                        <div class="stat"><div class="stat-lbl">Complexity C</div><div class="stat-val" id="out-c"></div></div>
+                        <div class="stat"><div class="stat-lbl">Mean score P̄</div><div class="stat-val" id="out-p"></div></div>
+                        <div class="stat"><div class="stat-lbl">Velocity LV</div><div class="stat-val" id="out-lv"></div></div>
+                    </div>
+                    <p class="mstep-live" id="step1-live"></p>
                 </div>
 
-                <div class="sub">What adds up to z</div>
-                <div id="contrib"></div>
+                <div class="mstep">
+                    <div class="mstep-head"><span class="mstep-num">2</span><h3>Add up the evidence into a score, z</h3></div>
+                    <p class="mstep-text">The model starts from a baseline of −5.17. Each cleared layer's score adds to it, longer training time subtracts a little, and faster learning velocity adds a boost. The total is the <b>log-odds z</b>: above 0 means certification is more likely than not.</p>
+                    <div class="eq">z = −5.17 + Σ wᵢ·sᵢ − 0.00015·T_seconds + 3200·LV</div>
+                    <div id="contrib"></div>
+                    <p class="mstep-live" id="step2-live"></p>
+                </div>
 
-                <div class="sub">Turning z into a probability</div>
-                <canvas id="sigmoidCanvas" class="sigmoid-canvas" role="img" aria-label="Logistic curve with the current log-odds marked"></canvas>
-
-                <div class="sub">Formulas</div>
-                <div class="eq">LV = (C · P̄) / (100 · T_seconds)
-z  = −5.17 + Σ wᵢ·sᵢ (cleared layers)
-        − 0.00015·T_seconds + 3200·LV
-p̂  = 1 / (1 + e^(−z))</div>
+                <div class="mstep">
+                    <div class="mstep-head"><span class="mstep-num">3</span><h3>Convert z into a probability</h3></div>
+                    <p class="mstep-text">The sigmoid curve turns any z into a value between 0% and 100%. z = 0 gives 50% and z ≈ +1.73 gives 85%, which are the Yellow and Green tier lines.</p>
+                    <div class="eq">p̂ = 1 / (1 + e^(−z))</div>
+                    <canvas id="sigmoidCanvas" class="sigmoid-canvas" role="img" aria-label="Logistic curve with the current log-odds marked"></canvas>
+                    <p class="mstep-live" id="step3-live"></p>
+                </div>
             </details>
         </section>
     </main>
@@ -601,7 +632,17 @@ p̂  = 1 / (1 + e^(−z))</div>
         $('out-c').textContent = r.unlockedC.toFixed(1);
         $('out-p').textContent = r.P.toFixed(1) + '%';
         $('out-lv').textContent = r.lv.toFixed(6);
-        $('out-z').textContent = (r.z >= 0 ? '+' : '') + r.z.toFixed(2);
+        const zStr = (r.z >= 0 ? '+' : '−') + Math.abs(r.z).toFixed(2);
+        const pStr = (r.prob * 100).toFixed(1) + '%';
+        $('step1-live').innerHTML = r.activeCount === 0
+            ? `This student hasn't cleared Layer 01, so no layers count yet: C = 0 and LV = 0.`
+            : `This student cleared <b>${r.activeCount} of 5</b> layers${blocked ? ` (stopped at Layer 0${r.gatedAt})` : ''}, so C = <b>${r.unlockedC.toFixed(1)}</b>, P̄ = <b>${r.P.toFixed(1)}%</b> and LV = <b>${r.lv.toFixed(6)}</b>.`;
+        $('step2-live').innerHTML = `For this student, z = <b>${zStr}</b>. ${r.z >= 0
+            ? 'That is above 0, so the odds favor certification.'
+            : 'That is below 0, so the odds are against certification.'}`;
+        $('step3-live').innerHTML = blocked
+            ? `σ(${zStr}) = <b>${pStr}</b>, but the gate overrides it: the student is blocked at Layer 0${r.gatedAt} whatever the probability.`
+            : `σ(${zStr}) = <b>${pStr}</b>, which puts this student in the <b>${TIER[r.tier].label.split(' · ')[0]}</b> tier.`;
         renderContrib(r);
         drawSigmoid();
 

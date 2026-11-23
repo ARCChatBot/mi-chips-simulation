@@ -1,4 +1,4 @@
-# MI-CHIPS Student Success & Gate Simulation
+# MI-CHIPS Student Success Logistic Regression Model
 
 An interactive, single-page simulation of the **MI-CHIPS** (Mixed Immersion Cleanroom & Hardware Intelligence Progression System) certification model: a gated logistic regression that estimates a student's probability of cleanroom certification from five training layers and total training time.
 
@@ -9,7 +9,7 @@ Open `index.html` in any browser. It has no build step and no dependencies.
 - **Student scores**: one slider for each of the five training layers (CBT Theory → 3D Simulation → VR Cleanroom → AR Data Viz → Physical Mastery) and one for total training time.
 - **Result**: the risk tier and the chance of certification, with a one-line explanation and the next step.
 - **Gate progress**: which layers are cleared, which one is blocked, and which are locked. Layers unlock in order, and the first score below 75% blocks everything after it.
-- **Show the math** (collapsed by default): the key values, how much each term adds to the log-odds `z`, the sigmoid curve, and the formulas.
+- **Show the math · 3 steps** (collapsed by default): (1) check the gates and measure progress (C, P̄, LV); (2) add up the evidence into the log-odds `z`; (3) convert `z` into a probability with the sigmoid. Each step has a plain-language explanation, its formula, a live chart or values, and a sentence describing the current student.
 - **Shareable scenarios**: every slider setting is saved in the URL.
 
 Styled with the Operation SEMI / MI-CHIPS presentation color system (C01–C12) and the Inter typeface.
