@@ -132,7 +132,7 @@
         .range-wrap.gate::after {
             content: '';
             position: absolute;
-            left: calc(75% - 1px);
+            left: calc(74.5% - 1px);
             top: 50%;
             transform: translateY(-50%);
             width: 2px;
@@ -292,6 +292,28 @@
         }
         .mstep-live b { color: var(--heading); }
         .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+
+        .time-row {
+            display: grid;
+            grid-template-columns: 34px minmax(0, 1fr) 82px;
+            align-items: center;
+            gap: 8px;
+            margin-top: 2px;
+        }
+        .time-row label { font-size: 0.72rem; font-weight: 500; color: var(--label); }
+        .time-row input[type=range] { accent-color: var(--c10-ice-blue); height: 14px; }
+        .time-val { font-size: 0.75rem; color: var(--label); text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+        .total-row { font-size: 0.85rem; font-weight: 600; margin-bottom: 10px; }
+        .total-row .val { font-size: 0.9rem; }
+
+        .table-wrap { overflow-x: auto; margin-bottom: 12px; }
+        .lv-tbl { width: 100%; border-collapse: collapse; font-size: 0.78rem; font-variant-numeric: tabular-nums; }
+        .lv-tbl th { text-align: right; font-weight: 600; color: var(--label); font-size: 0.7rem; padding: 4px 6px; border-bottom: 1px solid var(--line); }
+        .lv-tbl td { text-align: right; padding: 5px 6px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+        .lv-tbl th:first-child, .lv-tbl td:first-child { text-align: left; }
+        .lv-tbl td.lv { font-family: var(--mono); font-weight: 600; color: var(--heading); }
+        .lv-tbl tr.off td { color: var(--c06-body-silver); }
+        .lv-tbl tr.off td.lv { font-family: inherit; font-weight: 500; color: var(--c06-body-silver); }
         .stat { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 8px; text-align: center; }
         .stat-lbl { font-size: 0.68rem; color: var(--label); }
         .stat-val { font-family: var(--mono); font-size: 0.9rem; font-weight: 600; color: var(--heading); font-variant-numeric: tabular-nums; }
@@ -388,16 +410,11 @@
 
             <hr class="divider">
 
-            <div class="field">
-                <div class="field-head">
-                    <label for="slide-time">Total training time</label>
-                    <span class="val" id="val-time"></span>
-                </div>
-                <div class="range-wrap">
-                    <input type="range" id="slide-time" min="30" max="300" step="0.01" value="130.35">
-                </div>
+            <div class="field-head total-row">
+                <span>Total time T = Σ Tᵢ</span>
+                <span class="val" id="val-time"></span>
             </div>
-            <p class="hint">Each layer needs <b>75%</b> (the tick mark) to unlock the next one.</p>
+            <p class="hint">Each layer needs <b>74.5%</b> (the tick mark) to unlock the next one. Set the seconds each layer took with its time slider.</p>
         </section>
 
         <!-- Results -->
@@ -419,24 +436,31 @@
 
             <details class="card math">
                 <summary>Show the math · 3 steps</summary>
-                <p class="math-intro">The model turns five layer scores and training time into one probability in three steps.</p>
+                <p class="math-intro">The model turns five layer scores and five layer times into one probability in three steps.</p>
 
                 <div class="mstep">
-                    <div class="mstep-head"><span class="mstep-num">1</span><h3>Check the gates and measure progress</h3></div>
-                    <p class="mstep-text">Only layers cleared in order (75% or higher) count. From those layers the model takes three numbers: <b>C</b>, the complexity of the highest layer cleared; <b>P̄</b>, the average cleared score; and <b>LV</b>, the learning velocity, or how much complexity-weighted skill the student gains per second of training.</p>
-                    <div class="eq">LV = (C · P̄) / (100 · T_seconds)</div>
+                    <div class="mstep-head"><span class="mstep-num">1</span><h3>Check the gates and measure each layer's velocity</h3></div>
+                    <p class="mstep-text">Only layers passed in order (74.5% or higher) count. Each counted layer gets its own learning velocity from its own <b>complexity Cᵢ</b>, <b>proficiency Pᵢ</b> and <b>time Tᵢ in seconds</b>: how much complexity-weighted skill the student gained per second on that layer. The student's velocity <b>LV̄</b> is the average of those layer values.</p>
+                    <div class="eq">LVᵢ = (Cᵢ · Pᵢ) / (100 · Tᵢ)
+LV̄  = average of LVᵢ over passed layers</div>
+                    <div class="table-wrap">
+                        <table class="lv-tbl">
+                            <thead><tr><th>Layer</th><th>Cᵢ</th><th>Pᵢ</th><th>Tᵢ (s)</th><th>LVᵢ</th></tr></thead>
+                            <tbody id="lv-table"></tbody>
+                        </table>
+                    </div>
                     <div class="stats">
-                        <div class="stat"><div class="stat-lbl">Complexity C</div><div class="stat-val" id="out-c"></div></div>
-                        <div class="stat"><div class="stat-lbl">Mean score P̄</div><div class="stat-val" id="out-p"></div></div>
-                        <div class="stat"><div class="stat-lbl">Velocity LV</div><div class="stat-val" id="out-lv"></div></div>
+                        <div class="stat"><div class="stat-lbl">Layers passed</div><div class="stat-val" id="out-n"></div></div>
+                        <div class="stat"><div class="stat-lbl">Total time T (s)</div><div class="stat-val" id="out-t"></div></div>
+                        <div class="stat"><div class="stat-lbl">Mean velocity LV̄</div><div class="stat-val" id="out-lv"></div></div>
                     </div>
                     <p class="mstep-live" id="step1-live"></p>
                 </div>
 
                 <div class="mstep">
                     <div class="mstep-head"><span class="mstep-num">2</span><h3>Add up the evidence into a score, z</h3></div>
-                    <p class="mstep-text">The model starts from a baseline of −5.17. Each cleared layer's score adds to it, longer training time subtracts a little, and faster learning velocity adds a boost. The total is the <b>log-odds z</b>: above 0 means certification is more likely than not.</p>
-                    <div class="eq">z = −5.17 + Σ wᵢ·sᵢ − 0.00015·T_seconds + 3200·LV</div>
+                    <p class="mstep-text">The model starts from a baseline of −5.17. Each passed layer's score adds to it, total time (the sum of all layer times) subtracts a little, and a higher mean velocity adds a boost. The total is the <b>log-odds z</b>: above 0 means certification is more likely than not.</p>
+                    <div class="eq">z = −5.17 + Σ wᵢ·Pᵢ − 0.00015·T + 677.6·LV̄</div>
                     <div id="contrib"></div>
                     <p class="mstep-live" id="step2-live"></p>
                 </div>
@@ -473,20 +497,26 @@
             { key: 'l5', name: 'Physical Mastery', short: 'Physical', c: 8.0, w: 0.021 },
         ],
         timeCoef: -0.00015,
-        lvCoef: 3200.0,
-        gate: 75.0,
+        // Coefficient on the mean per-layer learning velocity. Rescaled from the
+        // original 3200 (fitted to the aggregate LV = C·P/(100·T)) so the reference
+        // record in the MI-CHIPS Systems Document keeps the same z (≈ +3.01, 95.3%).
+        lvCoef: 677.6,
+        gate: 74.5,          // pass mark, per the MI-CHIPS Systems Document
         greenAt: 85.0,
         yellowAt: 50.0,
     };
 
+    // Scores (l1–l5, %) and per-layer times (t1–t5, seconds)
     const PRESETS = {
-        passing:  { l1: 80, l2: 75, l3: 80, l4: 80, l5: 80, t: 130.35 },
-        advisory: { l1: 78, l2: 76, l3: 77, l4: 75, l5: 76, t: 240 },
-        gated:    { l1: 80, l2: 62, l3: 0,  l4: 0,  l5: 0,  t: 208.33 },
+        passing:  { l1: 80, l2: 74.5, l3: 80, l4: 80, l5: 78.9,
+                    t1: 1424.73, t2: 1763.56, t3: 649.65, t4: 411.51, t5: 3571.76 },
+        advisory: { l1: 78, l2: 76, l3: 77, l4: 75, l5: 76,
+                    t1: 2400, t2: 3000, t3: 1500, t4: 1200, t5: 4800 },
+        gated:    { l1: 80, l2: 62, l3: 0, l4: 0, l5: 0,
+                    t1: 4500, t2: 8000, t3: 0, t4: 0, t5: 0 },
     };
 
-    function evaluate(scores, tMins) {
-        const tSecs = tMins * 60.0;
+    function evaluate(scores, times) {
         let unlockedC = 0.0;
         const active = [];
         let gatedAt = null; // 1-based
@@ -501,8 +531,12 @@
             }
         }
 
+        const tSecs = times.reduce((a, b) => a + b, 0);       // T = Σ Tᵢ
         const P = active.length ? active.reduce((a, b) => a + b, 0) / active.length : 0.0;
-        const lv = (unlockedC * P) / (100.0 * tSecs);
+        // Per-layer learning velocity: LVᵢ = (Cᵢ · Pᵢ) / (100 · Tᵢ), 0 when Tᵢ is 0
+        const layerLV = MODEL.layers.map((L, i) =>
+            i < active.length && times[i] > 0 ? (L.c * scores[i]) / (100.0 * times[i]) : 0);
+        const lv = active.length ? layerLV.slice(0, active.length).reduce((a, b) => a + b, 0) / active.length : 0.0;
         const layerTerms = MODEL.layers.map((L, i) => i < active.length ? L.w * active[i] : 0);
         const timeTerm = MODEL.timeCoef * tSecs;
         const lvTerm = MODEL.lvCoef * lv;
@@ -515,8 +549,16 @@
         else if (prob * 100 >= MODEL.yellowAt) tier = 'yellow';
         else tier = 'red';
 
-        return { unlockedC, P, lv, z, prob, gatedAt, activeCount: active.length, layerTerms, timeTerm, lvTerm, tier };
+        return { unlockedC, P, lv, layerLV, tSecs, z, prob, gatedAt, activeCount: active.length, layerTerms, timeTerm, lvTerm, tier };
     }
+
+    // ---------- Formatting ----------
+    const fmtScore = s => (Number.isInteger(s) ? s : s.toFixed(1)) + '%';
+    const fmtSecs = s => s.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' s';
+    const fmtDuration = s => {
+        const m = Math.round(s / 60);
+        return m >= 60 ? `${Math.floor(m / 60)} h ${m % 60} min` : `${m} min`;
+    };
 
     // ---------- Build inputs ----------
     const $ = id => document.getElementById(id);
@@ -527,18 +569,29 @@
                 <span class="val" id="val-${L.key}"></span>
             </div>
             <div class="range-wrap gate">
-                <input type="range" id="slide-${L.key}" min="0" max="100" value="80">
+                <input type="range" id="slide-${L.key}" min="0" max="100" step="0.1" value="80" aria-label="${L.name} score">
+            </div>
+            <div class="time-row">
+                <label for="time-${L.key}">Time</label>
+                <input type="range" id="time-${L.key}" min="0" max="10800" step="0.01" value="1200" aria-label="${L.name} time in seconds">
+                <span class="time-val" id="tval-${L.key}"></span>
             </div>
         </div>`).join('');
 
     const sliders = MODEL.layers.map(L => $('slide-' + L.key));
-    const timeSlider = $('slide-time');
+    const timeSliders = MODEL.layers.map(L => $('time-' + L.key));
+    const tKey = i => 't' + (i + 1);
 
     // ---------- State <-> URL ----------
-    const readState = () => ({ scores: sliders.map(s => parseFloat(s.value)), t: parseFloat(timeSlider.value) });
+    const readState = () => ({
+        scores: sliders.map(s => parseFloat(s.value)),
+        times: timeSliders.map(s => parseFloat(s.value)),
+    });
     function applyPreset(p) {
-        MODEL.layers.forEach((L, i) => { sliders[i].value = p[L.key]; });
-        timeSlider.value = p.t;
+        MODEL.layers.forEach((L, i) => {
+            sliders[i].value = p[L.key];
+            timeSliders[i].value = p[tKey(i)];
+        });
         update();
     }
     function loadFromHash() {
@@ -554,8 +607,10 @@
     }
     function writeHash(state) {
         const params = new URLSearchParams();
-        MODEL.layers.forEach((L, i) => params.set(L.key, state.scores[i]));
-        params.set('t', state.t);
+        MODEL.layers.forEach((L, i) => {
+            params.set(L.key, state.scores[i]);
+            params.set(tKey(i), state.times[i]);
+        });
         history.replaceState(null, '', '#' + params.toString());
     }
 
@@ -571,22 +626,20 @@
 
     function update() {
         const state = readState();
-        const r = evaluate(state.scores, state.t);
+        const r = evaluate(state.scores, state.times);
         current = r;
         const blockedIdx = r.gatedAt !== null ? r.gatedAt - 1 : null;
         const stateOf = i => blockedIdx === null || i < blockedIdx ? 'pass' : i === blockedIdx ? 'blocked' : 'locked';
 
         // Sliders
         MODEL.layers.forEach((L, i) => {
-            $('val-' + L.key).textContent = state.scores[i] + '%';
+            $('val-' + L.key).textContent = fmtScore(state.scores[i]);
+            $('tval-' + L.key).textContent = fmtSecs(state.times[i]);
             const f = $('field-' + L.key);
             f.classList.toggle('blocked', stateOf(i) === 'blocked');
             f.classList.toggle('locked', stateOf(i) === 'locked');
         });
-        const mins = state.t;
-        $('val-time').textContent = mins >= 60
-            ? `${Math.floor(mins / 60)} h ${Math.round(mins % 60)} min`
-            : `${Math.round(mins)} min`;
+        $('val-time').textContent = `${fmtSecs(r.tSecs)} · ${fmtDuration(r.tSecs)}`;
 
         // Hero
         const tier = TIER[r.tier];
@@ -603,7 +656,7 @@
 
         if (blocked) {
             const L = MODEL.layers[blockedIdx];
-            $('summary').textContent = `Scored ${state.scores[blockedIdx]}%, needs 75%. Later layers don't count until this one is passed.`;
+            $('summary').textContent = `Scored ${fmtScore(state.scores[blockedIdx])}, needs ${MODEL.gate}%. Later layers don't count until this one is passed.`;
             $('next').textContent = `Not cleared. Routed to OneDrive remediation modules for ${L.name}.`;
         } else if (r.tier === 'green') {
             $('summary').textContent = 'Cleared all 5 gates with a strong score.';
@@ -620,7 +673,7 @@
         $('steps').innerHTML = MODEL.layers.map((L, i) => {
             const s = stateOf(i);
             const mark = s === 'pass' ? '✓' : s === 'blocked' ? '✕' : i + 1;
-            const score = s === 'locked' ? 'locked' : state.scores[i] + '%';
+            const score = s === 'locked' ? 'locked' : fmtScore(state.scores[i]);
             return `<li class="step ${s}" aria-label="Layer ${i + 1} ${L.name}: ${s === 'pass' ? 'cleared' : s}">
                 <div class="dot">${mark}</div>
                 <div class="step-name">${L.short}</div>
@@ -629,14 +682,25 @@
         }).join('');
 
         // Math
-        $('out-c').textContent = r.unlockedC.toFixed(1);
-        $('out-p').textContent = r.P.toFixed(1) + '%';
+        $('lv-table').innerHTML = MODEL.layers.map((L, i) => {
+            const s = stateOf(i);
+            const counted = s === 'pass';
+            return `<tr class="${counted ? '' : 'off'}">
+                <td>0${i + 1} ${L.short}</td>
+                <td>${L.c.toFixed(1)}</td>
+                <td>${fmtScore(state.scores[i])}</td>
+                <td>${state.times[i].toFixed(2)}</td>
+                <td class="lv">${counted ? r.layerLV[i].toFixed(6) : (s === 'blocked' ? 'blocked' : 'locked')}</td>
+            </tr>`;
+        }).join('');
+        $('out-n').textContent = `${r.activeCount} of 5`;
+        $('out-t').textContent = r.tSecs.toFixed(2);
         $('out-lv').textContent = r.lv.toFixed(6);
         const zStr = (r.z >= 0 ? '+' : '−') + Math.abs(r.z).toFixed(2);
         const pStr = (r.prob * 100).toFixed(1) + '%';
         $('step1-live').innerHTML = r.activeCount === 0
-            ? `This student hasn't cleared Layer 01, so no layers count yet: C = 0 and LV = 0.`
-            : `This student cleared <b>${r.activeCount} of 5</b> layers${blocked ? ` (stopped at Layer 0${r.gatedAt})` : ''}, so C = <b>${r.unlockedC.toFixed(1)}</b>, P̄ = <b>${r.P.toFixed(1)}%</b> and LV = <b>${r.lv.toFixed(6)}</b>.`;
+            ? `This student hasn't passed Layer 01, so no layers count yet and LV̄ = 0.`
+            : `This student passed <b>${r.activeCount} of 5</b> layers${blocked ? ` (stopped at Layer 0${r.gatedAt})` : ''}. The average of their ${r.activeCount} per-layer velocities is LV̄ = <b>${r.lv.toFixed(6)}</b>, over a total time of T = <b>${fmtSecs(r.tSecs)}</b>.`;
         $('step2-live').innerHTML = `For this student, z = <b>${zStr}</b>. ${r.z >= 0
             ? 'That is above 0, so the odds favor certification.'
             : 'That is below 0, so the odds are against certification.'}`;
@@ -726,7 +790,7 @@
     }
 
     // ---------- Wiring ----------
-    [...sliders, timeSlider].forEach(s => s.addEventListener('input', update));
+    [...sliders, ...timeSliders].forEach(s => s.addEventListener('input', update));
     document.querySelectorAll('[data-preset]').forEach(b =>
         b.addEventListener('click', () => applyPreset(PRESETS[b.dataset.preset])));
 
