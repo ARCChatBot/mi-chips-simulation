@@ -6,13 +6,13 @@ Open `index.html` in any browser. It has no build step and no dependencies.
 
 ## What it shows
 
-- **Five training layers** with sliders: CBT Theory → 3D Simulation → VR Cleanroom → AR Data Viz → Physical Mastery.
-- **75% prerequisite gate**: layers unlock in order. The first score below 75% blocks that layer, and every later layer contributes nothing.
-- **Progression pipeline**: an animation showing how far the student gets and where they are blocked.
-- **Sigmoid plot**: the logistic curve with the current log-odds `z` and the tier thresholds marked.
-- **Breakdown of z**: how much the intercept, each layer, the time penalty and the learning-velocity boost add to `z`.
-- **Tier & action**: Green / Yellow / Red, with the matching automated action.
-- **Shareable scenarios**: every slider setting is saved in the URL, so you can send a link to any scenario.
+- **Student scores**: one slider for each of the five training layers (CBT Theory → 3D Simulation → VR Cleanroom → AR Data Viz → Physical Mastery) and one for total training time.
+- **Result**: the risk tier and the chance of certification, with a one-line explanation and the next step.
+- **Gate progress**: which layers are cleared, which one is blocked, and which are locked. Layers unlock in order, and the first score below 75% blocks everything after it.
+- **Show the math** (collapsed by default): the key values, how much each term adds to the log-odds `z`, the sigmoid curve, and the formulas.
+- **Shareable scenarios**: every slider setting is saved in the URL.
+
+Styled with the Operation SEMI / MI-CHIPS presentation color system (C01–C12) and the Inter typeface.
 
 ## Model (v2.1)
 
@@ -45,5 +45,5 @@ All coefficients are defined in one `MODEL` object near the top of the script in
 | Preset | Scores (L1–L5) | Time | Result |
 |---|---|---|---|
 | Passing | 80 / 75 / 80 / 80 / 80 | 130.35 min | Green, p̂ ≈ 95.5% |
-| Advisory | 78 / 76 / 77 / 75 / 76 | 240 min | Yellow, p̂ ≈ 64.4% |
-| At-Risk | 80 / 62 / 0 / 0 / 0 | 208.33 min | Red (gated at Layer 02) |
+| Borderline | 78 / 76 / 77 / 75 / 76 | 240 min | Yellow, p̂ ≈ 64.4% |
+| Blocked | 80 / 62 / 0 / 0 / 0 | 208.33 min | Red (gated at Layer 02) |
